@@ -74,6 +74,8 @@ def extract_fields(instance):
 def main(
     dataset_name_or_path,
     splits,
+    shard_id,
+    num_shards,
     validation_ratio,
     output_dir,
     retrieval_file,
@@ -122,6 +124,9 @@ def main(
     logger.info(f'Found {set(dataset.keys())} splits')
     if set(splits) - set(dataset.keys()) != set():
         raise ValueError(f"Unknown splits {set(splits) - set(dataset.keys())}")
+    if shard_id is not None:
+        for split in splits:
+            dataset[split] = dataset[split].shard(num_shards, shard_id)
     for split in splits:
         split_instances[split] = {x["instance_id"]: x for x in dataset[split]}
         add_text_inputs(
@@ -174,7 +179,7 @@ def main(
     if push_to_hub_user is not None:
         dataset.push_to_hub(f'{push_to_hub_user}/{output_file}', use_auth_token=hub_token)
     else:
-        dataset.save_to_disk(output_file)
+        dataset.save_to_disk(output_file.as_posix())
     logger.info(f"Finsihed saving to {output_file}")
 
 
@@ -186,6 +191,8 @@ if __name__ == "__main__":
         default="princeton-nlp/SWE-bench",
         help="Dataset to use for test set from HuggingFace Datasets or path to a save_to_disk directory.",
     )
+    parser.add_argument("--shard_id", type=int)
+    parser.add_argument("--num_shards", type=int, default=20)
     parser.add_argument(
         "--splits",
         nargs="+",

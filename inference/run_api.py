@@ -20,7 +20,9 @@ from tenacity import (
     stop_after_attempt,
     wait_random_exponential,
 )
+print("Importing datasets")
 from datasets import load_dataset, load_from_disk
+print("Imported datasets")
 from make_datasets.utils import extract_diff
 from argparse import ArgumentParser
 import logging
@@ -138,7 +140,7 @@ def call_chat(model_name_or_path, inputs, use_azure, temperature, top_p, **model
                 **model_args,
             )
         else:
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model=model_name_or_path,
                 messages=[
                     {"role": "system", "content": system_messages},
@@ -190,6 +192,7 @@ def openai_inference(
     existing_ids (set): A set of ids that have already been processed.
     max_cost (float): The maximum cost to spend on inference.
     """
+    # Check size of dataset
     encoding = tiktoken.encoding_for_model(model_name_or_path)
     test_dataset = test_dataset.filter(
         lambda x: gpt_tokenize(x["text"], encoding) <= MODEL_LIMITS[model_name_or_path],
@@ -231,7 +234,7 @@ def openai_inference(
                 temperature,
                 top_p,
             )
-            completion = response.choices[0]["message"]["content"]
+            completion = response.choices[0].message.content
             total_cost += cost
             print(f"Total Cost: {total_cost:.2f}")
             output_dict["full_output"] = completion
