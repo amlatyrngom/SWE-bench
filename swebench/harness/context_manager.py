@@ -618,7 +618,17 @@ class TaskEnvContextManager:
         # Skip installation if no instructions provided
         if "install" not in specifications:
             return True
-
+        if "pvlib" in instance["repo"]:
+            # Rewrite setup.py file to replace 'netcdf4' with 'netcdf4==1.6.5'
+            self.log.write(f"Rewriting setup.py file to replace 'netcdf4' with 'netcdf4==1.6.5'")
+            setup_file = "setup.py"
+            # Assert setup.py exists
+            assert os.path.exists(setup_file), f"setup.py not found in {os.getcwd()}"
+            with open(setup_file, "r") as f:
+                setup_contents = f.read()
+            setup_contents = setup_contents.replace("'netcdf4'", "'netcdf4==1.6.5'")
+            with open(setup_file, "w") as f:
+                f.write(setup_contents)
         cmd_install = f"{self.cmd_activate} && {specifications['install']}"
         self.log.write(f"Running installation command: {cmd_install}")
         try:
@@ -707,7 +717,7 @@ class TaskEnvContextManager:
             f.write(f"{APPLY_PATCH_PASS} ({patch_type})\n")
         return True
 
-    def run_tests_task(self, instance: dict):
+    def run_tests_task(self, instance: dict, with_install_pytest: bool = True):
         """
         Run tests for task instance
 
@@ -719,6 +729,9 @@ class TaskEnvContextManager:
         try:
             # Run test command for task instance
             test_cmd = f"{self.cmd_activate} && {instance['test_cmd']}"
+            # # Make pytest verbose
+            # if "pytest" in test_cmd and " -s " not in test_cmd:
+            #     test_cmd = test_cmd.replace("pytest ", "pytest -s --log-cli-level=INFO ")
             with open(self.log_file, "a") as f:
                 f.write(f"Test Script: {test_cmd};\n")
 
@@ -736,6 +749,20 @@ class TaskEnvContextManager:
                 for key in specifications["env_vars_test"]:
                     del self.exec.subprocess_args["env"][key]
 
+            if with_install_pytest and out_test.returncode != 0:
+                pytest_not_found = "pytest: command not found"
+                outs = [out_test.stdout, out_test.stderr]
+                self.log.write(f"Check for pytest not found.", level=INFO)
+                is_pytest_not_found = any(pytest_not_found in out for out in outs if out is not None)
+                self.log.write(f"Check for pytest not found: {is_pytest_not_found}.")
+                if is_pytest_not_found:
+                    f.write(f"PYTEST NOT FOUND. RETRYING WITH INSTALLATION.\n")
+                    pytest_install_cmd = f"{self.cmd_activate} && pip install pytest"
+                    with open(self.log_file, "a") as f:
+                        f.write(f"Installing pytest: {pytest_install_cmd};\n")
+                    self.exec(pytest_install_cmd, shell=True)
+                    return self.run_tests_task(instance, with_install_pytest=False)
+            
             # Write pass/fail status to log file
             with open(self.log_file, "a") as f:
                 if out_test.returncode != 0:

@@ -499,7 +499,7 @@ MAP_VERSION_TO_INSTALL_PVLIB = {
         "python": "3.9",
         "install": "pip install -e .[all]",
         "packages": "pandas scipy",
-        "pip_packages": ["jupyter", "ipython", "matplotlib", "pytest", "flake8"]
+        "pip_packages": ["jupyter", "ipython", "matplotlib", "pytest", "flake8", "h5py"]
     }
     for k in ['0.5', '0.6', '0.7', '0.8', '0.9']
 }

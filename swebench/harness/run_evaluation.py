@@ -68,6 +68,7 @@ def main(
     timeout: int,
     verbose: bool,
     num_processes: int = -1,
+    post_cleanup: bool = False,
 ):
     """
     Runs evaluation on predictions for each model/repo/version combination.
@@ -205,11 +206,13 @@ def main(
             pool.join()
     finally:
         # Clean up
-        for temp_dir in temp_dirs:
-            # Kill all processes that are using the temp directory
-            subprocess.run(f"lsof +D {temp_dir} | awk 'NR>1 {{print $2}}' | xargs kill", shell=True, capture_output=True)
-            # Remove temp directory
-            shutil.rmtree(temp_dir, ignore_errors=True)
+        if post_cleanup:
+            for temp_dir in temp_dirs:
+                print(f"Cleaning up {temp_dir}")
+                # Kill all processes that are using the temp directory
+                subprocess.run(f"lsof +D {temp_dir} | awk 'NR>1 {{print $2}}' | xargs kill", shell=True, capture_output=True)
+                # Remove temp directory
+                shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
@@ -224,6 +227,7 @@ if __name__ == "__main__":
     parser.add_argument("--timeout", type=int, help="(Optional) Timeout in seconds (default: 900)", default=900)
     parser.add_argument("--verbose", action="store_true", help="(Optional) Verbose mode")
     parser.add_argument("--num_processes", type=int, help="(Optional) Number of processes to use.", default=-1)
+    parser.add_argument("--post-cleanup", action="store_true", help="(Optional) Clean up temp directories after evaluation", default=False)
     args = parser.parse_args()
     logger.propagate = args.verbose
     main(**vars(args))
