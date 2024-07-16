@@ -508,7 +508,8 @@ MAP_VERSION_TO_INSTALL_PYDICOM = {
     k: {
         "python": "3.6",
         "install": "pip install -e .",
-        "packages": "numpy"
+        "packages": "numpy pytest",
+        "pip_packages": ["pytest"],
     }
     for k in ['1.2', '1.3', '1.4', '2.0', '2.1', '2.2', '2.3']
 }
@@ -519,7 +520,7 @@ MAP_VERSION_TO_INSTALL_PYDICOM.update({
     k: {**MAP_VERSION_TO_INSTALL_PYDICOM[k], "python": "3.9"}
     for k in ['2.1', '2.2']})
 MAP_VERSION_TO_INSTALL_PYDICOM.update({
-    k: {**MAP_VERSION_TO_INSTALL_PYDICOM[k], "python": "3.10"}
+    k: {**MAP_VERSION_TO_INSTALL_PYDICOM[k], "python": "3.9"}
     for k in ['2.3']})
 
 MAP_VERSION_TO_INSTALL_HUMANEVAL= {k: { "python": "3.9" } for k in ['1.0']}

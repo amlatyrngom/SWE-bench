@@ -752,14 +752,13 @@ class TaskEnvContextManager:
             if with_install_pytest and out_test.returncode != 0:
                 pytest_not_found = "pytest: command not found"
                 outs = [out_test.stdout, out_test.stderr]
-                self.log.write(f"Check for pytest not found.", level=INFO)
+                self.log.write(f"Check for pytest not found.")
                 is_pytest_not_found = any(pytest_not_found in out for out in outs if out is not None)
                 self.log.write(f"Check for pytest not found: {is_pytest_not_found}.")
                 if is_pytest_not_found:
-                    f.write(f"PYTEST NOT FOUND. RETRYING WITH INSTALLATION.\n")
+                    self.log.write(f"PYTEST NOT FOUND. RETRYING WITH INSTALLATION.")
                     pytest_install_cmd = f"{self.cmd_activate} && pip install pytest"
-                    with open(self.log_file, "a") as f:
-                        f.write(f"Installing pytest: {pytest_install_cmd};\n")
+                    self.log.write(f"Installing pytest: {pytest_install_cmd}")
                     self.exec(pytest_install_cmd, shell=True)
                     return self.run_tests_task(instance, with_install_pytest=False)
             
