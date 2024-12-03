@@ -24,6 +24,7 @@ from swebench.harness.constants import (
     LOG_INSTANCE,
     LOG_TEST_OUTPUT,
     RUN_EVALUATION_LOG_DIR,
+    BASE_WORKING_DIR,
     UTF8,
 )
 from swebench.harness.docker_utils import (
@@ -469,6 +470,7 @@ def make_run_report(
         "schema_version": 2,
     }
     report_file = Path(
+        BASE_WORKING_DIR,
         list(predictions.values())[0][KEY_MODEL].replace("/", "__")
         + f".{run_id}"
         + ".json"
