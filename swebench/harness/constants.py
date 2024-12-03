@@ -1,12 +1,21 @@
 from enum import Enum
 from pathlib import Path
 from typing import TypedDict
+import os
 
 # Constants - Evaluation Log Directories
-BASE_IMAGE_BUILD_DIR = Path("logs/build_images/base")
-ENV_IMAGE_BUILD_DIR = Path("logs/build_images/env")
-INSTANCE_IMAGE_BUILD_DIR = Path("logs/build_images/instances")
-RUN_EVALUATION_LOG_DIR = Path("logs/run_evaluation")
+BASE_DIR = "working_stage"
+if os.path.exists("configs/main.toml"):
+    import tomli
+    with open("configs/main.toml", "rb") as f:
+        config = tomli.load(f)
+    BASE_DIR = config["working_stage"]
+os.makedirs(BASE_DIR, exist_ok=True)
+
+BASE_IMAGE_BUILD_DIR = Path(BASE_DIR, "logs/build_images/base")
+ENV_IMAGE_BUILD_DIR = Path(BASE_DIR, "logs/build_images/env")
+INSTANCE_IMAGE_BUILD_DIR = Path(BASE_DIR, "logs/build_images/instances")
+RUN_EVALUATION_LOG_DIR = Path(BASE_DIR, "logs/run_evaluation")
 
 # Constants - Task Instance Class
 class SWEbenchInstance(TypedDict):
